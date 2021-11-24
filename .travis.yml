@@ -1,0 +1,25 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t leafsolutions/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true leafsolutions/react-test npm test
+
+after_success:
+  - docker build -t leafsolutions/multi-client ./client
+  - docker build -t leafsolutions/multi-nginx ./nginx
+  - docker build -t leafsolutions/multi-api ./api
+  - docker build -t leafsolutions/multi-worker ./worker
+  # log in to docker CLI using variables stored in travis-ci
+  # the first statement retrieves the password from travis
+  # the second statement calls the docker login passing username (-u)
+  # and the password coming from the standard-in (stin)
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push images to docker hub
+  - docker push leafsolutions/multi-client
+  - docker push leafsolutions/multi-nginx
+  - docker push leafsolutions/multi-worker
+  - docker push leafsolutions/multi-api

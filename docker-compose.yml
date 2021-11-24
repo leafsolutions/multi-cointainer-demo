@@ -11,7 +11,7 @@ services:
     build:
       context: ./nginx
     ports:
-      - 4000:80 #just for showing port mapping
+      - 80:80
   api:
     build:
       context: ./api
