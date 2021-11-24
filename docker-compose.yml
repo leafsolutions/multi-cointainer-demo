@@ -1,0 +1,46 @@
+version: '3'
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - POSTGRES_PASSWORD=postgres_password
+  redis:
+    image: 'redis:latest'
+  nginx:
+    restart: always
+    build:
+      context: ./nginx
+    ports:
+      - 4000:80 #just for showing port mapping
+  api:
+    build:
+      context: ./api
+    volumes:
+      - /app/node_modules
+      - ./api:/app #mapping between the local folder and the app folder
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379 #from redis official image
+      - PGUSER=postgres
+      - PGHOST=postgres # the name of the service described above
+      - PGDATABASE=postgres
+      - PGPASSWORD=postgres_password
+      - PGPORT=5432
+  client:
+    stdin_open: true
+    build:
+      context: ./client
+    volumes:
+      - /app/node_modules
+      - ./client:/app
+    environment:
+      - CHOKIDAR_USEPOLLING=true # fix for detecting changes in the local folder
+  worker:
+    build:
+      context: ./worker
+    volumes:
+      - /app/node_modules
+      - ./worker:/app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
